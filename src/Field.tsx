@@ -1,10 +1,10 @@
-import { Cancelable } from "lodash";
-import debounce from "lodash.debounce";
-import { action, computed, observable, reaction, runInAction, toJS } from "mobx";
-import { inject, Observer, observer } from "mobx-react";
-import React from "react";
-import { PickProperties } from "ts-essentials";
-import { FormContext, FormElement } from "./FormContext";
+import { Cancelable } from 'lodash';
+import debounce from 'lodash.debounce';
+import { action, computed, observable, reaction, runInAction, toJS } from 'mobx';
+import { inject, Observer, observer } from 'mobx-react';
+import React from 'react';
+import { PickProperties } from 'ts-essentials';
+import { FormContext, FormElement } from './FormContext';
 
 export type Validator<T> = (value: T) => Promise<string[] | undefined>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -15,7 +15,7 @@ export type FieldRenderProps<T, State = any, Intermediate = any> = {
     onFocus: () => void;
     value: T;
   };
-  meta: FormElement["meta"] & {
+  meta: FormElement['meta'] & {
     isActive: boolean;
     isValid: boolean;
 
@@ -63,7 +63,7 @@ export interface FieldProps<T, State, Intermediate> {
   children: (props: FieldRenderProps<T, State, Intermediate>) => JSX.Element;
 }
 
-@inject((props) => props)
+@inject(props => props)
 @observer
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class Field<T, State = any, Intermediate = any>
@@ -86,9 +86,9 @@ export class Field<T, State = any, Intermediate = any>
 
   private _disposeFns: (() => unknown)[] = [];
 
-  private _validator: (Validator<T> | Validator<T> & Cancelable) | undefined = undefined;
+  private _validator: (Validator<T> | (Validator<T> & Cancelable)) | undefined = undefined;
   private _intermediateValidator:
-    | (Validator<Intermediate> | Validator<Intermediate> & Cancelable)
+    | (Validator<Intermediate> | (Validator<Intermediate> & Cancelable))
     | undefined = undefined;
 
   @computed public get value(): T {
@@ -171,7 +171,7 @@ export class Field<T, State = any, Intermediate = any>
     return this.props.validateOnChange ?? true;
   }
 
-  @computed public get meta(): FormElement["meta"] {
+  @computed public get meta(): FormElement['meta'] {
     return this;
   }
 
@@ -181,9 +181,9 @@ export class Field<T, State = any, Intermediate = any>
         onBlur: this.onBlur,
         onChange: this.onChange,
         onFocus: this.onFocus,
-        value: this.value
+        value: this.value,
       },
-      meta: this
+      meta: this,
     };
   }
 
@@ -245,16 +245,12 @@ export class Field<T, State = any, Intermediate = any>
   }
 
   @action.bound public async componentDidMount(): Promise<void> {
-    this._initialState = toJS(this.props.state, {recurseEverything: true}) as State;
+    this._initialState = toJS(this.props.state, { recurseEverything: true }) as State;
 
     const defaultDelay = 100;
     this.dispose(
       reaction(
-        () =>
-          [this.props.validator, this.props.delay ?? defaultDelay] as [
-            Validator<T>,
-            number
-          ],
+        () => [this.props.validator, this.props.delay ?? defaultDelay] as [Validator<T>, number],
         ([validator, delay]) => {
           if (!delay) {
             this._validator = validator as Validator<T>;
@@ -262,7 +258,7 @@ export class Field<T, State = any, Intermediate = any>
             this._validator = validator
               ? debounce(() => validator?.(this.value), delay ?? defaultDelay, {
                   leading: true,
-                  maxWait: defaultDelay
+                  maxWait: defaultDelay,
                 })
               : undefined;
           }
@@ -274,20 +270,17 @@ export class Field<T, State = any, Intermediate = any>
     this.dispose(
       reaction(
         () =>
-          [
-            this.props.intermediateValidator,
-            this.props.delay ?? defaultDelay
-          ] as [Validator<Intermediate>, number],
+          [this.props.intermediateValidator, this.props.delay ?? defaultDelay] as [
+            Validator<Intermediate>,
+            number
+          ],
         ([validator, delay]) => {
           if (!delay) {
             this._intermediateValidator = validator as Validator<Intermediate>;
           } else {
             this._intermediateValidator = validator
               ? debounce(
-                  async () =>
-                    this.intermediate === undefined
-                      ? undefined
-                      : validator?.(this.intermediate),
+                  async () => (this.intermediate === undefined ? undefined : validator?.(this.intermediate)),
                   delay ?? defaultDelay,
                   { leading: true, trailing: true, maxWait: defaultDelay }
                 )
@@ -295,7 +288,7 @@ export class Field<T, State = any, Intermediate = any>
           }
         },
         {
-          fireImmediately: true
+          fireImmediately: true,
         }
       )
     );
@@ -340,8 +333,6 @@ export class Field<T, State = any, Intermediate = any>
   }
 
   public render(): JSX.Element {
-    return (
-      <Observer>{this.props.children.bind(this, this.fieldProps)}</Observer>
-    );
+    return <Observer>{this.props.children.bind(this, this.fieldProps)}</Observer>;
   }
 }
