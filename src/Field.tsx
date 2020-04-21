@@ -9,32 +9,34 @@ import { FormContext, FormElement } from './FormContext';
 export type Validator<T> = (value: T) => Promise<string[] | undefined>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type FieldRenderProps<T, State = any, Intermediate = any> = {
-  input: {
-    onBlur: () => void;
-    onChange: (value: T) => void;
-    onFocus: () => void;
-    value: T;
+  readonly input: {
+    readonly onBlur: () => void;
+    readonly onChange: (value: T, options?: {
+       preserveIntermediate?: boolean;
+    }) => void;
+    readonly onFocus: () => void;
+    readonly value: T;
   };
-  meta: FormElement['meta'] & {
-    isActive: boolean;
-    isValid: boolean;
+  readonly meta: FormElement['meta'] & {
+    readonly isActive: boolean;
+    readonly isValid: boolean;
 
     /**
      * True if the field has ever gained focus.
      */
-    isVisited: boolean;
-    isValidating: boolean;
+    readonly isVisited: boolean;
+    readonly isValidating: boolean;
 
     /**
      * True if the field has ever gained and lost focus.
      */
-    isTouched: boolean;
-    isPristine: boolean;
-    isDirty: boolean;
-    isModified: boolean;
-    errors: string[];
-    name: keyof PickProperties<State, T>;
-    initialValue: T;
+    readonly isTouched: boolean;
+    readonly isPristine: boolean;
+    readonly isDirty: boolean;
+    readonly isModified: boolean;
+    readonly errors: string[];
+    readonly name: keyof PickProperties<State, T>;
+    readonly initialValue: T;
     intermediate: Intermediate | undefined;
   };
 };
@@ -92,7 +94,7 @@ export class Field<T, State = any, Intermediate = any>
     | undefined = undefined;
 
   @computed public get value(): T {
-    return (this.props.state[this.name] as unknown) as T;
+    return this.props.state && ((this.props.state[this.name] as unknown) as T);
   }
 
   @computed public get errors(): string[] {
@@ -144,7 +146,27 @@ export class Field<T, State = any, Intermediate = any>
   }
 
   @computed public get isEqual(): (a: T, b: T) => boolean {
-    return this.props.isEqual ?? ((a, b): boolean => a === b);
+    return (
+      this.props.isEqual ??
+      ((a, b): boolean => {
+        const isEqual = a === b;
+        if (process.env.NODE_ENV !== 'production') {
+          if (
+            (a != null && (typeof a === 'function' || typeof a === 'object')) ||
+            (b != null && (typeof b === 'function' || typeof b === 'object'))
+          ) {
+            console.warn(
+              `using default (strict equal) operator on ${this.name} could be a mistake because, when having ` +
+                `reference types for initial and current states, the default equality will always yield false.\n` +
+                `This warning will not show up in production. IsEqual: ${String(isEqual)}, Values:`,
+              a,
+              b
+            );
+          }
+        }
+        return isEqual;
+      })
+    );
   }
 
   @computed public get isValid(): boolean {
@@ -164,7 +186,7 @@ export class Field<T, State = any, Intermediate = any>
   }
 
   @computed public get validateOnInit(): boolean {
-    return this.props.validateOnInit ?? false;
+    return this.props.validateOnInit ?? true;
   }
 
   @computed public get validateOnChange(): boolean {
@@ -188,7 +210,7 @@ export class Field<T, State = any, Intermediate = any>
   }
 
   @computed public get hasIntermediate(): boolean {
-    return this.intermediate === undefined;
+    return this.intermediate !== undefined;
   }
 
   private async _validate(): Promise<string[] | undefined> {
@@ -219,8 +241,12 @@ export class Field<T, State = any, Intermediate = any>
     });
   }
 
-  @action.bound public onChange(value: T): void {
-    this._intermediate = undefined;
+  @action.bound public onChange(value: T, options?: {
+     preserveIntermediate?: boolean
+  }): void {
+    if (!options?.preserveIntermediate) {
+      this._intermediate = undefined;
+    }
     this._isModified = true;
     this._isChangingThroughEvent = true;
     ((this.props.state[this.name] as unknown) as T) = value;
@@ -296,10 +322,7 @@ export class Field<T, State = any, Intermediate = any>
     this.dispose(
       reaction(
         () => this.intermediate,
-        value => {
-          if (value == null) {
-            return;
-          }
+        () => {
           this._isModified = true;
           this.validateOnChange && this.validate();
         }

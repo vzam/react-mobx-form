@@ -4,7 +4,8 @@ import React from "react";
 
 export interface FormProps {
   formContext?: FormContext;
-  children: (formElement: FormElement) => JSX.Element;
+  isRoot?: boolean;
+  children: ({form}: {form: FormElement}) => JSX.Element;
 }
 
 export type FormElement = {
@@ -75,7 +76,9 @@ export class Form extends React.Component<FormProps> implements FormContext {
   }
 
   public componentDidMount(): void {
-    this.props.formContext?.register(this);
+     if (!this.props.isRoot) {
+      this.props.formContext?.register(this);
+     }
   }
 
   public componentWillUnmount(): void {
@@ -85,7 +88,7 @@ export class Form extends React.Component<FormProps> implements FormContext {
   public render(): JSX.Element {
     return (
       <Provider formContext={this}>
-        <Observer>{(): JSX.Element => this.props.children(this)}</Observer>
+        <Observer>{(): JSX.Element => this.props.children({form: this})}</Observer>
       </Provider>
     );
   }
