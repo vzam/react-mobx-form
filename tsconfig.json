@@ -1,28 +1,19 @@
 {
-   "compilerOptions": {
-      "outDir": "build",
-      "module": "esnext",
-      "target": "es2015",
-      "lib": [
-         "DOM",
-         "DOM.Iterable",
-         "ESNext"
-      ],
-      "sourceMap": true,
-      "allowJs": false,
-      "jsx": "react",
-      "declaration": true,
-      "experimentalDecorators": true,
-      "allowSyntheticDefaultImports": true,
-      "moduleResolution": "node",
-      "esModuleInterop": true
-   },
-   "include": [
-      "src",
-   ],
-   "exclude": [
-      "node_modules",
-      "build"
-   ],
-   "esModuleInterop": true
+  "compilerOptions": {
+    "outDir": "build",
+    "module": "esnext",
+    "target": "es2015",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "sourceMap": true,
+    "allowJs": false,
+    "jsx": "react",
+    "declaration": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "build", "**/*.stories.tsx"],
+  "esModuleInterop": true
 }

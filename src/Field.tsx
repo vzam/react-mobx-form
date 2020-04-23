@@ -4,7 +4,7 @@ import { action, computed, observable, reaction, runInAction, toJS } from 'mobx'
 import { inject, Observer, observer } from 'mobx-react';
 import React from 'react';
 import { PickProperties } from 'ts-essentials';
-import { FormContext, FormElement } from './FormContext';
+import { FormContext, FormElement } from './Form';
 
 export type Validator<T> = (value: T) => Promise<string[] | undefined>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

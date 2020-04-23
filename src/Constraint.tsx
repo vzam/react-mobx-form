@@ -1,7 +1,7 @@
 import { action, computed, observable } from 'mobx';
 import { inject, observer } from 'mobx-react';
 import React from 'react';
-import { FormContext, FormElement } from './FormContext';
+import { FormContext, FormElement } from './Form';
 
 @inject(props => props)
 @observer

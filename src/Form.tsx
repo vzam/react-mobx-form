@@ -1,11 +1,12 @@
-import { action, computed, observable } from "mobx";
-import { inject, observer, Observer, Provider } from "mobx-react";
-import React from "react";
+import { action, computed, observable } from 'mobx';
+import { inject, observer, Observer, Provider } from 'mobx-react';
+import React from 'react';
+import { FormPresetProps } from "./FormPreset";
 
-export interface FormProps {
+export interface FormProps extends FormPresetProps {
   formContext?: FormContext;
   isRoot?: boolean;
-  children: ({form}: {form: FormElement}) => JSX.Element;
+  children: ({ form }: { form: FormElement }) => JSX.Element;
 }
 
 export type FormElement = {
@@ -26,7 +27,7 @@ export type FormContext = FormElement & {
   unregister: (formElement: FormElement) => void;
 };
 
-@inject((props) => props)
+@inject(props => props)
 @observer
 export class Form extends React.Component<FormProps> implements FormContext {
   @observable private _fields: FormElement[] = [];
@@ -39,7 +40,7 @@ export class Form extends React.Component<FormProps> implements FormContext {
     this._fields = this._fields.filter(e => e !== field);
   }
 
-  @computed public get meta(): FormElement["meta"] {
+  @computed public get meta(): FormElement['meta'] {
     return this;
   }
 
@@ -60,7 +61,7 @@ export class Form extends React.Component<FormProps> implements FormContext {
   }
 
   @computed public get isValid(): boolean {
-     return this._fields.every(field => field.meta.isValid);
+    return this._fields.every(field => field.meta.isValid);
   }
 
   @computed public get isValidating(): boolean {
@@ -76,9 +77,9 @@ export class Form extends React.Component<FormProps> implements FormContext {
   }
 
   public componentDidMount(): void {
-     if (!this.props.isRoot) {
+    if (!this.props.isRoot) {
       this.props.formContext?.register(this);
-     }
+    }
   }
 
   public componentWillUnmount(): void {
@@ -87,8 +88,14 @@ export class Form extends React.Component<FormProps> implements FormContext {
 
   public render(): JSX.Element {
     return (
-      <Provider formContext={this}>
-        <Observer>{(): JSX.Element => this.props.children({form: this})}</Observer>
+      <Provider
+        formContext={this}
+        validateOnInit={this.props.validateOnInit}
+        validateOnFocus={this.props.validateOnFocus}
+        validateOnChange={this.props.validateOnChange}
+        validateOnBlur={this.props.validateOnBlur}
+      >
+        <Observer>{(): JSX.Element => this.props.children({ form: this })}</Observer>
       </Provider>
     );
   }
